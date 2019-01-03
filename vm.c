@@ -80,6 +80,50 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   return 0;
 }
 
+//map physical pages starting at start_va_shr
+int
+shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pages){
+  int j;
+  
+  for(j=0; j < amount_pages; j++)
+    mappages(pgdir, (void*) (start_va_shr + (j * PGSIZE)) , PGSIZE, V2P(pages[j]), PTE_W|PTE_U);
+
+  return 0;
+}
+
+// Allocate shared page tables and physical memory to grow process from oldsz to
+// newsz, which need not be page aligned.  Returns new size or 0 on error.
+int
+shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages)
+{
+  struct proc* proc = (&cpus[cpuid()])->proc;
+  uint sz = PGROUNDUP(proc->sz);
+  pte_t *pte;
+  uint start_va_shr;
+  uint j;
+
+  for(start_va_shr =  sz; start_va_shr <= KERNBASE - (amount_pages * PGSIZE) ; start_va_shr += PGSIZE){
+    for(j = 0; j < amount_pages; j++){
+      pte = walkpgdir(pgdir, (void*) (start_va_shr + (j * PGSIZE)) , 0);
+      if (*pte & PTE_P){
+        start_va_shr +=  j * PGSIZE;
+        break;
+      }
+    }
+    if (j == amount_pages)
+      break;
+  }
+
+  if(start_va_shr > KERNBASE - (amount_pages * PGSIZE))
+    return -1;
+
+  //map physical pages starting at start_va_shr 
+  shm_from_allocuvm(proc->pgdir,start_va_shr, pages, amount_pages);
+
+
+  return start_va_shr;
+}
+
 // There is one page table per process, plus one that's used when
 // a CPU is not running any process (kpgdir). The kernel uses the
 // current process's page table during system calls and interrupts;
