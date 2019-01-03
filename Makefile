@@ -15,6 +15,7 @@ OBJS = \
 	picirq.o\
 	pipe.o\
 	proc.o\
+	sharedm.o\
 	sleeplock.o\
 	spinlock.o\
 	ticket_lock.o\

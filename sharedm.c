@@ -1,6 +1,7 @@
 #include "types.h"
 #include "defs.h"
 #include "param.h"
+#include "date.h"
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
@@ -28,10 +29,8 @@ struct {
 
 void shm_init(void)
 {
-  int i,j;
-
-  initlock(&shmtable.shmlock,"shmtable");
-  
+    int i,j;
+    initlock(&shmtable.shmlock,"shmtable");
     for(i = 0; i < MAXSHM; i++) {
   	    shmtable.blocks[i].size = 0;
   	    shmtable.blocks[i].ref_count = -1;
@@ -43,6 +42,7 @@ void shm_init(void)
 int sys_shm_open(int id, int page_count, int flag)
 {
     int i;
+    acquire(&shmtable.shmlock);
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
             break;
@@ -52,26 +52,33 @@ int sys_shm_open(int id, int page_count, int flag)
     if (i == MAXSHM) {
         for(i = 0; i < MAXSHM; i++) {
             if (shmtable.blocks[i].ref_count == -1) {
-                
+                if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count) == 0)
+                {
+                    cprintf("bad shared mem allocation!!");
+                    return -2;
+                }
                 shmtable.blocks[i].id = id;
                 shmtable.blocks[i].owner = myproc()->pid;
                 shmtable.blocks[i].flags = flag;
-                shmtable.blocks[i].ref_count = 0;
+                shmtable.blocks[i].ref_count = 1;
                 shmtable.blocks[i].size = page_count;
+                return 0;
             }  
         }
+        cprintf("shared mem is full!!");
+        return -3;
     } else {
-        panic("reopen shared mem!!");
+        cprintf("reopen shared mem!!");
         return -1;
     }
 }
 
 void* sys_shm_attach(int id)
 {
-
+    return 0;
 }
 
 int sys_shm_close(int id)
 {
-
+    return 0;
 }
