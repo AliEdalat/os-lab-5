@@ -27,22 +27,30 @@ struct {
     struct shmblock blocks[MAXSHM];
 }shmtable;
 
-void shm_init(void)
+int start = 1;
+
+void shminit(void)
 {
     int i,j;
     initlock(&shmtable.shmlock,"shmtable");
+    cprintf("dd\n");
     for(i = 0; i < MAXSHM; i++) {
-  	    shmtable.blocks[i].size = 0;
-  	    shmtable.blocks[i].ref_count = -1;
+	shmtable.blocks[i].size = 0;
+  	shmtable.blocks[i].ref_count = -1;
         for(j = 0; j < MAXSHMPBLOCK ; j++)
-            shmtable.blocks[i].pages[j] = 0;
+           shmtable.blocks[i].pages[j] = 0;
     }
+    cprintf("dd\n");
 }
 
-int shm_open(int id, int page_count, int flag)
+int shmopen(int id, int page_count, int flag)
 {
     int i;
     acquire(&shmtable.shmlock);
+    if(start){
+        shminit();
+        start=0;
+    }
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
             break;
@@ -54,8 +62,8 @@ int shm_open(int id, int page_count, int flag)
             if (shmtable.blocks[i].ref_count == -1) {
                 if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count) == 0)
                 {
-                    cprintf("bad shared mem allocation!!");
                     release(&shmtable.shmlock);
+                    cprintf("bad shared mem allocation!!");
                     return -2;
                 }
                 shmtable.blocks[i].id = id;
@@ -67,22 +75,22 @@ int shm_open(int id, int page_count, int flag)
                 return 0;
             }  
         }
-        cprintf("shared mem is full!!");
         release(&shmtable.shmlock);
+        cprintf("shared mem is full!!");
         return -3;
     } else {
-        cprintf("reopen shared mem!!");
         release(&shmtable.shmlock);
+        cprintf("reopen shared mem!!");
         return -1;
     }
 }
 
-void* shm_attach(int id)
+void* shmattach(int id)
 {
     return 0;
 }
 
-int shm_close(int id)
+int shmclose(int id)
 {
     return 0;
 }

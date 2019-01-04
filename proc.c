@@ -95,7 +95,7 @@ found:
   p->priority = 10;
   p->MFQpriority = 1;
   p->tickets = 100;
-  for (i = 0; i < 36; ++i)
+  for (i = 0; i < 41; ++i)
   {
     p->syscalls[i].count = 0;
   }
@@ -783,7 +783,7 @@ invocation_log(int pid)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
     if(p->pid == pid){
-      for (i = 0; i < 36; ++i)
+      for (i = 0; i < 41; ++i)
       {
         if (p->syscalls[i].count > 0)
         {
@@ -796,7 +796,7 @@ invocation_log(int pid)
               d->date.month, d->date.day);
             if (i == 0 || i == 1 || i == 2 || i == 13 || i == 10 || i == 27 || i == 28)
               cprintf("%d %s  (%s)\n",p->pid, p->syscalls[i].name, a->type[0]); 
-            if (i == 21 || i == 22 || i == 24 || i == 5 || i == 11 || i == 12 || i == 9 || i == 20)
+            if (i == 21 || i == 22 || i == 24 || i == 5 || i == 11 || i == 12 || i == 9 || i == 20 || i == 39 || i == 40)
               cprintf("%d %s  (%s %d)\n",p->pid, p->syscalls[i].name, a->type[0], a->int_argv[0]);
             if (i == 23 || i == 33 || i == 34)
               cprintf("%d %s  (%s %d, %s %d)\n",p->pid, p->syscalls[i].name,
@@ -821,6 +821,9 @@ invocation_log(int pid)
             if (i == 16)
                 cprintf("%d %s  (%s %s, %s %d, %s %d)\n",p->pid, p->syscalls[i].name, a->type[0], a->str_argv[0], a->type[1], a->int_argv[0],
                   a->type[2], a->int_argv[1]);
+            if (i == 38)
+                cprintf("%d %s  (%s %d, %s %d, %s %d)\n",p->pid, p->syscalls[i].name, a->type[0], a->int_argv[0], a->type[1], a->int_argv[1],
+                  a->type[2], a->int_argv[2]);
 
             a = a->next;
           }

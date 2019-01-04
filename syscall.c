@@ -129,7 +129,7 @@ extern int sys_shm_open(void);
 extern int sys_shm_attach(void);
 extern int sys_shm_close(void);
 
-static char* syscalls_string [37] = {
+static char* syscalls_string [41] = {
 "sys_fork",
 "sys_exit",
 "sys_wait",
@@ -166,7 +166,11 @@ static char* syscalls_string [37] = {
 "sys_chtickets",
 "sys_chpr",
 "sys_ps",
-"sys_chmfq"
+"sys_chmfq",
+"sys_shm_init",
+"sys_shm_open",
+"sys_shm_attach",
+"sys_shm_close"
 };
 
 static int (*syscalls[])(void) = {
@@ -234,6 +238,7 @@ void fill_arglist(struct syscallarg* end, int type){
                 case 30:
                 case 32:
                 case 36:
+		case 38:
 			safestrcpy(end->type[0], "void", strlen("void")+1);break;
 		case 6:
 		case 22:
@@ -245,6 +250,8 @@ void fill_arglist(struct syscallarg* end, int type){
                 case 21:
                 case 31:
                 case 33:
+		case 40:
+		case 41:
 			safestrcpy(end->type[0], "int", strlen("int")+1);
 			if (argint(0, &int_arg) < 0){
    				cprintf("bad int arg val?\n");
@@ -347,6 +354,18 @@ void fill_arglist(struct syscallarg* end, int type){
                         end->int_argv[0] = n;
                         end->int_argv[1] = fd;
                         end->str_argv[0] = path;
+                        break;
+              case 39:
+			safestrcpy(end->type[0], "int", strlen("int")+1);
+                        safestrcpy(end->type[1], "int", strlen("int")+1);
+                        safestrcpy(end->type[2], "int", strlen("int")+1);
+                        if(argint(0, &int_arg) < 0 || argint(1, &n) < 0 || argint(2, &fd) < 0){
+                               cprintf("bad arg val?\n");
+   			       break;
+                        }
+                        end->int_argv[0] = int_arg;
+                        end->int_argv[1] = n;
+                        end->int_argv[2] = fd;
                         break;
 	}
 }

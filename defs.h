@@ -141,10 +141,10 @@ void            yield(void);
 void            swtch(struct context**, struct context*);
 
 // sharedm.c
-void 			shm_init(void);
-int 			shm_open(int id, int page_count, int flag);
-void* 			shm_attach(int id);
-int 			shm_close(int id);
+void 			shminit(void);
+int 			shmopen(int id, int page_count, int flag);
+void* 			shmattach(int id);
+int 			shmclose(int id);
 
 // spinlock.c
 void            acquire(struct spinlock*);

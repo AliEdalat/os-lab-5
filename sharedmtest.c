@@ -7,5 +7,6 @@ int
 main(int argc, char *argv[])
 {
 	shm_init();
-	return 0;
+	//printf(1,"pp\n");
+	exit();
 }
