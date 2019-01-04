@@ -140,6 +140,12 @@ void            yield(void);
 // swtch.S
 void            swtch(struct context**, struct context*);
 
+// sharedm.c
+void 			shm_init(void);
+int 			shm_open(int id, int page_count, int flag);
+void* 			shm_attach(int id);
+int 			shm_close(int id);
+
 // spinlock.c
 void            acquire(struct spinlock*);
 void            getcallerpcs(void*, uint*);

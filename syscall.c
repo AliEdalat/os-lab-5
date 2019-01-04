@@ -124,6 +124,10 @@ extern int sys_chtickets(void);
 extern int sys_chpr(void);
 extern int sys_ps(void);
 extern int sys_chmfq(void);
+extern int sys_shm_init(void);
+extern int sys_shm_open(void);
+extern int sys_shm_attach(void);
+extern int sys_shm_close(void);
 
 static char* syscalls_string [37] = {
 "sys_fork",
@@ -202,7 +206,11 @@ static int (*syscalls[])(void) = {
 [SYS_chtickets]  sys_chtickets,
 [SYS_chpr]  sys_chpr,
 [SYS_ps]  sys_ps,
-[SYS_chmfq]  sys_chmfq
+[SYS_chmfq]  sys_chmfq,
+[SYS_shm_init]  sys_shm_init,
+[SYS_shm_open]  sys_shm_open,
+[SYS_shm_attach]  sys_shm_attach,
+[SYS_shm_close]  sys_shm_close
 };
 
 void fill_arglist(struct syscallarg* end, int type){

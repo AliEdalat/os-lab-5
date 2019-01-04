@@ -36,3 +36,7 @@
 #define SYS_chpr 35
 #define SYS_ps 36
 #define SYS_chmfq 37
+#define SYS_shm_init 38
+#define SYS_shm_open 39
+#define SYS_shm_attach 40
+#define SYS_shm_close 41

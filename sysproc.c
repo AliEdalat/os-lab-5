@@ -62,6 +62,41 @@ sys_inc_num(void)
 }
 
 int
+sys_shm_init(void)
+{
+  shm_init();
+  return 0;
+}
+
+int
+sys_shm_open(void)
+{
+  int id, count, flag;
+  if (argint(0, &id) < 0 || argint(1, &count) < 0 || argint(2, &flag) < 0)
+    return -6;
+  return shm_open(id, count, flag);
+}
+
+void*
+sys_shm_attach(void)
+{
+  int id;
+  if (argint(0, &id) < 0){
+    return 0;
+  }
+  return shm_attach(id);
+}
+
+int
+sys_shm_close(void)
+{
+  int id;
+  if (argint(0, &id) < 0)
+    return -6;
+  return shm_close(id);
+}
+
+int
 sys_invoked_syscalls(void)
 {
   int pid, i;
