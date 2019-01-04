@@ -45,8 +45,8 @@ void shminit(void)
 
 int shmopen(int id, int page_count, int flag)
 {
-    int i;
-    acquire(&shmtable.shmlock);
+    int i, j;
+    //acquire(&shmtable.shmlock);
     if(start){
         shminit();
         start=0;
@@ -60,12 +60,19 @@ int shmopen(int id, int page_count, int flag)
     if (i == MAXSHM) {
         for(i = 0; i < MAXSHM; i++) {
             if (shmtable.blocks[i].ref_count == -1) {
+		    cprintf("dud\n");
+                for(j = 0; j < page_count; j++) {
+                    shmtable.blocks[i].pages[j] = (char*)kalloc();
+                }
+                acquire(&shmtable.shmlock);
                 if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count) == 0)
                 {
+			    cprintf("did\n");
                     release(&shmtable.shmlock);
                     cprintf("bad shared mem allocation!!");
                     return -2;
                 }
+		    cprintf("dod\n");
                 shmtable.blocks[i].id = id;
                 shmtable.blocks[i].owner = myproc()->pid;
                 shmtable.blocks[i].flags = flag;
@@ -75,11 +82,11 @@ int shmopen(int id, int page_count, int flag)
                 return 0;
             }  
         }
-        release(&shmtable.shmlock);
+        //release(&shmtable.shmlock);
         cprintf("shared mem is full!!");
         return -3;
     } else {
-        release(&shmtable.shmlock);
+        //release(&shmtable.shmlock);
         cprintf("reopen shared mem!!");
         return -1;
     }
