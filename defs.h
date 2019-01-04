@@ -218,8 +218,8 @@ void            uartintr(void);
 void            uartputc(int);
 
 // vm.c
-int 			shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pages);
-int 			shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages);
+int 		shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pages, int perm);
+int 		shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages, int perm);
 void            seginit(void);
 void            kvmalloc(void);
 pde_t*          setupkvm(void);

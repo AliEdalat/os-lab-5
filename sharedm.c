@@ -60,12 +60,12 @@ int shmopen(int id, int page_count, int flag)
     if (i == MAXSHM) {
         for(i = 0; i < MAXSHM; i++) {
             if (shmtable.blocks[i].ref_count == -1) {
-		    cprintf("dud\n");
+		    cprintf("dud\n");// TODO : check page_count <= MAXSHMPBLOCK
+                acquire(&shmtable.shmlock);
                 for(j = 0; j < page_count; j++) {
                     shmtable.blocks[i].pages[j] = (char*)kalloc();
                 }
-                acquire(&shmtable.shmlock);
-                if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count) == 0)
+                if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count, PTE_W|PTE_U) == 0)
                 {
 			    cprintf("did\n");
                     release(&shmtable.shmlock);
@@ -94,7 +94,15 @@ int shmopen(int id, int page_count, int flag)
 
 void* shmattach(int id)
 {
-    return 0;
+    int i;
+    for(i = 0; i < MAXSHM; i++) {
+        if (shmtable.blocks[i].id == id) {
+            if(shmtable.blocks[i].flags == 0) {
+                
+            }        
+        }  
+    } 
+    return 0;  
 }
 
 int shmclose(int id)

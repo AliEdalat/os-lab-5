@@ -82,11 +82,11 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 
 //map physical pages starting at start_va_shr
 int
-shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pages){
+shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pages, int perm){
   int j;
   
   for(j=0; j < amount_pages; j++)
-    mappages(pgdir, (void*) (start_va_shr + (j * PGSIZE)) , PGSIZE, V2P(pages[j]), PTE_W|PTE_U);
+    mappages(pgdir, (void*) (start_va_shr + (j * PGSIZE)) , PGSIZE, V2P(pages[j]), perm);
 
   return 0;
 }
@@ -94,7 +94,7 @@ shm_from_allocuvm(pde_t *pgdir, uint start_va_shr, char* pages[], uint amount_pa
 // Allocate shared page tables and physical memory to grow process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
 int
-shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages)
+shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages, int perm)
 {
   struct proc* proc = (&cpus[cpuid()])->proc;
   uint sz = PGROUNDUP(proc->sz);
@@ -118,7 +118,7 @@ shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages)
     return -1;
 
   //map physical pages starting at start_va_shr 
-  shm_from_allocuvm(proc->pgdir,start_va_shr, pages, amount_pages);
+  shm_from_allocuvm(proc->pgdir,start_va_shr, pages, amount_pages, perm);
 
 
   return start_va_shr;
