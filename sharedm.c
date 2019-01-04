@@ -60,23 +60,16 @@ int shmopen(int id, int page_count, int flag)
     if (i == MAXSHM) {
         for(i = 0; i < MAXSHM; i++) {
             if (shmtable.blocks[i].ref_count == -1) {
-		    cprintf("dud\n");// TODO : check page_count <= MAXSHMPBLOCK
+                cprintf("dud\n");// TODO : check page_count <= MAXSHMPBLOCK
                 acquire(&shmtable.shmlock);
                 for(j = 0; j < page_count; j++) {
                     shmtable.blocks[i].pages[j] = (char*)kalloc();
                 }
-                if (shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, page_count, PTE_W|PTE_U) == 0)
-                {
-			    cprintf("did\n");
-                    release(&shmtable.shmlock);
-                    cprintf("bad shared mem allocation!!");
-                    return -2;
-                }
-		    cprintf("dod\n");
+		        cprintf("dod\n");
                 shmtable.blocks[i].id = id;
                 shmtable.blocks[i].owner = myproc()->pid;
                 shmtable.blocks[i].flags = flag;
-                shmtable.blocks[i].ref_count = 1;
+                shmtable.blocks[i].ref_count = 0;
                 shmtable.blocks[i].size = page_count;
                 release(&shmtable.shmlock);
                 return 0;
@@ -94,12 +87,37 @@ int shmopen(int id, int page_count, int flag)
 
 void* shmattach(int id)
 {
-    int i;
+    int i, start_va = 0;
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
             if(shmtable.blocks[i].flags == 0) {
-                
-            }        
+                if (myproc()->pid == shmtable.blocks[i].owner)
+                {
+                    acquire(&shmtable.shmlock);
+                    if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
+                            PTE_W|PTE_U)) == 0)
+                    {
+                        cprintf("did\n");
+                        release(&shmtable.shmlock);
+                        panic("bad shared mem allocation!!");
+                    }
+                    release(&shmtable.shmlock);
+                } else {
+                    acquire(&shmtable.shmlock);
+                    if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
+                            PTE_U)) == 0)
+                    {
+                        cprintf("did\n");
+                        release(&shmtable.shmlock);
+                        panic("bad shared mem allocation!!");
+                    }
+                    release(&shmtable.shmlock);
+                }
+            } else {
+
+            }
+            shmtable.blocks[i].ref_count++;
+            return (char*)start_va;
         }  
     } 
     return 0;  

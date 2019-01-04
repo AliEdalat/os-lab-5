@@ -6,7 +6,9 @@
 int
 main(int argc, char *argv[])
 {
-	shm_open(1,3,1);
-	//printf(1,"pp\n");
+	char* a;
+	shm_open(1,3,0);
+	a = shm_attach(1);
+	*a = 'r';
 	exit();
 }
