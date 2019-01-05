@@ -114,16 +114,42 @@ void* shmattach(int id)
                     release(&shmtable.shmlock);
                 }
             } else {
-
+                if (myproc()->pid == shmtable.blocks[i].owner || myproc()->parent->pid == shmtable.blocks[i].owner)
+                {
+                    acquire(&shmtable.shmlock);
+                    if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
+                            PTE_W|PTE_U)) == 0)
+                    {
+                        cprintf("did\n");
+                        release(&shmtable.shmlock);
+                        panic("bad shared mem allocation!!");
+                    }
+                    release(&shmtable.shmlock);
+                }
             }
             shmtable.blocks[i].ref_count++;
             return (char*)start_va;
-        }  
+        }
     } 
     return 0;  
 }
 
 int shmclose(int id)
-{
+{ // TODO : check flags in this function.
+    int i, j;
+    for(i = 0; i < MAXSHM; i++) {
+        if (shmtable.blocks[i].id == id) {
+            acquire(&shmtable.shmlock);
+            shmtable.blocks[i].ref_count--;
+            if (shmtable.blocks[i].ref_count == 0)
+            {
+                for (j = 0; j < shmtable.blocks[i].size; ++j)
+                {
+                    kfree(shmtable.blocks[i].pages[j]);
+                }
+            }
+            release(&shmtable.shmlock);
+        }
+    }
     return 0;
 }
