@@ -10,7 +10,8 @@
 #include "spinlock.h"
 
 #define MAXSHMPBLOCK   4  // maximum amount of pages in shared memory block
-#define MAXSHM         10 // maximun amount of shared memory blocks in OS
+#define MAXSHM         10 // maximum amount of shared memory blocks in OS
+#define PROCNUM        64 // maximum number of processes
 
 struct shmblock
 {
@@ -20,12 +21,13 @@ struct shmblock
     int ref_count;
     int size;
     char* pages[MAXSHMPBLOCK];
+    int members[PROCNUM];
 };
 
 struct {
     struct spinlock shmlock;
     struct shmblock blocks[MAXSHM];
-}shmtable;
+} shmtable;
 
 int start = 1;
 
@@ -36,57 +38,61 @@ void shminit(void)
     cprintf("dd\n");
     for(i = 0; i < MAXSHM; i++) {
 	shmtable.blocks[i].size = 0;
-  	shmtable.blocks[i].ref_count = -1;
-        for(j = 0; j < MAXSHMPBLOCK ; j++)
-           shmtable.blocks[i].pages[j] = 0;
+  	shmtable.blocks[i].ref_count = 0;
+    for(j = 0; j < MAXSHMPBLOCK ; j++)
+        shmtable.blocks[i].pages[j] = 0;
+    for(j = 0; j < PROCNUM ; j++)
+        shmtable.blocks[i].members[j] = 0;
     }
-    cprintf("dd\n");
+    // cprintf("dd\n");
 }
 
 int shmopen(int id, int page_count, int flag)
 {
     int i, j;
-    //acquire(&shmtable.shmlock);
     if(start){
         shminit();
         start=0;
     }
-    for(i = 0; i < MAXSHM; i++) {
-        if (shmtable.blocks[i].id == id) {
+
+    for(i = 0; i < MAXSHM; i++)
+        if (shmtable.blocks[i].id == id)
             break;
-        }  
-    }
 
     if (i == MAXSHM) {
+        acquire(&shmtable.shmlock);
         for(i = 0; i < MAXSHM; i++) {
-            if (shmtable.blocks[i].ref_count == -1) {
-                cprintf("dud\n");// TODO : check page_count <= MAXSHMPBLOCK
-                acquire(&shmtable.shmlock);
+            if (shmtable.blocks[i].ref_count == 0) {
+                // cprintf("dud\n");// TODO : check page_count <= MAXSHMPBLOCK TEST
+                
+                if (page_count > MAXSHMPBLOCK)
+                    panic("Number of pages is larger than available blocks!:D");
+                
                 for(j = 0; j < page_count; j++) {
                     shmtable.blocks[i].pages[j] = (char*)kalloc();
                 }
-		        cprintf("dod\n");
+
+		        // cprintf("dod\n");
                 shmtable.blocks[i].id = id;
                 shmtable.blocks[i].owner = myproc()->pid;
                 shmtable.blocks[i].flags = flag;
-                shmtable.blocks[i].ref_count = 0;
+                shmtable.blocks[i].ref_count = 1;
                 shmtable.blocks[i].size = page_count;
                 release(&shmtable.shmlock);
                 return 0;
             }  
         }
-        //release(&shmtable.shmlock);
+        release(&shmtable.shmlock);
         cprintf("shared mem is full!!");
         return -3;
     } else {
         //release(&shmtable.shmlock);
-        cprintf("reopen shared mem!!");
+        cprintf("Shared mem is already open!!");
         return -1;
     }
 }
 
-void* shmattach(int id)
-{
+void* shmattach(int id) {
     int i, start_va = 0;
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
@@ -126,8 +132,15 @@ void* shmattach(int id)
                     }
                     release(&shmtable.shmlock);
                 }
+                else{
+                    release(&shmtable.shmlock);
+                    panic("Access denied!!");
+                }
             }
+            acquire(&shmtable.shmlock);
+            shmtable.blocks[i].members[shmtable.blocks[i].ref_count-1] = myproc()->pid;
             shmtable.blocks[i].ref_count++;
+            release(&shmtable.shmlock);
             return (char*)start_va;
         }
     } 
@@ -135,17 +148,22 @@ void* shmattach(int id)
 }
 
 int shmclose(int id)
-{ // TODO : check flags in this function.
-    int i, j;
+{ 
+    int i, j, k;
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
             acquire(&shmtable.shmlock);
-            shmtable.blocks[i].ref_count--;
-            if (shmtable.blocks[i].ref_count == 0)
-            {
-                for (j = 0; j < shmtable.blocks[i].size; ++j)
-                {
-                    kfree(shmtable.blocks[i].pages[j]);
+            for(j = 0; j < PROCNUM ; j++){
+                if (myproc()->pid == shmtable.blocks[i].owner || myproc()->pid == shmtable.blocks[i].members[j]){
+                    shmtable.blocks[i].ref_count--;
+                    if (shmtable.blocks[i].ref_count == 0)
+                    {
+                        for (k = 0; k < shmtable.blocks[i].size; ++k)
+                        {
+                            kfree(shmtable.blocks[i].pages[k]);
+                        }
+                    }
+                    break;
                 }
             }
             release(&shmtable.shmlock);
