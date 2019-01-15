@@ -139,7 +139,7 @@ void* shmattach(int id) {
             acquire(&shmtable.shmlock);
             shmtable.blocks[i].members[shmtable.blocks[i].ref_count-1] = myproc()->pid;
             shmtable.blocks[i].ref_count++;
-            
+            myproc()->shid[myproc()->shidnum++] = id;
             for( k = 0; k < shmtable.blocks[i].size; k++)
             {
                 myproc()->shmPages[myproc()->index] = (start_va+(k*PGSIZE));

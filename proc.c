@@ -191,7 +191,7 @@ growproc(int n)
 int
 fork(void)
 {
-  int i, pid;
+  int i, pid, k, temp;
   struct proc *np;
   struct proc *curproc = myproc();
 
@@ -206,6 +206,11 @@ fork(void)
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
+  }
+  temp = curproc->shidnum;
+  for (k = 0; k < temp; ++k)
+  {
+  	shmattach(curproc->shid[k]);
   }
   np->sz = curproc->sz;
   np->parent = curproc;

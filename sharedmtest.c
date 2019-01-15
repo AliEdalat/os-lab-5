@@ -12,7 +12,7 @@ main(int argc, char *argv[])
 	shm_open(1,3,1);
 	b = shm_attach(1);
 	if ((pid = fork()) == 0){
-		//a = shm_attach(1);
+		// a = shm_attach(1);
 		// printf(1,"b pointer in child : %p\n",b);
 		b[0] = 'r';
 		b[1] = 'u';
