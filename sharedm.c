@@ -35,7 +35,6 @@ void shminit(void)
 {
     int i,j;
     initlock(&shmtable.shmlock,"shmtable");
-    cprintf("dd\n");
     for(i = 0; i < MAXSHM; i++) {
 	shmtable.blocks[i].size = 0;
   	shmtable.blocks[i].ref_count = 0;
@@ -93,7 +92,7 @@ int shmopen(int id, int page_count, int flag)
 }
 
 void* shmattach(int id) {
-    int i, start_va = 0;
+    int i, k, start_va = 0;
     for(i = 0; i < MAXSHM; i++) {
         if (shmtable.blocks[i].id == id) {
             if(shmtable.blocks[i].flags == 0) {
@@ -140,6 +139,20 @@ void* shmattach(int id) {
             acquire(&shmtable.shmlock);
             shmtable.blocks[i].members[shmtable.blocks[i].ref_count-1] = myproc()->pid;
             shmtable.blocks[i].ref_count++;
+            
+            for( k = 0; k < shmtable.blocks[i].size; k++)
+            {
+                myproc()->shmPages[myproc()->index] = (start_va+(k*PGSIZE));
+                myproc()->paPages[myproc()->index] = /*(int)(shmtable.blocks[i].pages[k]);*/(int)walkpgdir(myproc()->pgdir,(char*)start_va+(k*PGSIZE),0);
+                myproc()->index++;
+                cprintf("pid : %d, va : %p, pa : %p\n",myproc()->pid, (char*)start_va+(k*PGSIZE), (char*)walkpgdir(myproc()->pgdir,(char*)start_va+(k*PGSIZE),0));
+            }
+            
+            for( k = 0; k < myproc()->index; k++){
+                cprintf("v:%p, p: %p\n",(char*)myproc()->shmPages[k],(char*)myproc()->paPages[k]);
+            }
+
+            // myproc()->shmPages[myproc()->index++] = (uint)start_va;
             release(&shmtable.shmlock);
             return (char*)start_va;
         }

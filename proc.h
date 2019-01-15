@@ -84,6 +84,9 @@ struct proc {
   //int retime;                // Process READY(RUNNABLE) time
   //int rutime;                // Process RUNNING time
   int tickets;                 // Process tickets used in LOTTERY scheduling algorithm
+  int index;
+  int shmPages[40];
+  int paPages[40];
 };
 
 struct node{

@@ -33,7 +33,7 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
+pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
@@ -120,6 +120,7 @@ shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages, int perm)
   //map physical pages starting at start_va_shr 
   shm_from_allocuvm(proc->pgdir,start_va_shr, pages, amount_pages, perm);
 
+  myproc()->sz += amount_pages * PGSIZE;
 
   return start_va_shr;
 }
@@ -364,16 +365,32 @@ copyuvm(pde_t *pgdir, uint sz)
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
+  int a , k;
+  
 
   if((d = setupkvm()) == 0)
     return 0;
   for(i = 0; i < sz; i += PGSIZE){
+    a = 0;
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
+    for (k = 0; k < myproc()->index; k++){
+      if (myproc()->shmPages[k] == (uint) i){
+        if(mappages(d, (void*)i, PGSIZE, pa, PTE_W|PTE_U) < 0) {
+          goto bad;
+        }
+        cprintf("va : %p, pa : %p, parrent : %p,va : %p\n",(void*)i, (char*)pa, 
+        (char*)myproc()->paPages[k], (char*)myproc()->shmPages[k]);
+        a = 1;
+        break; 
+      }
+    }
+    if (a)
+      continue;
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)P2V(pa), PGSIZE);
