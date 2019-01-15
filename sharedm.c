@@ -100,7 +100,7 @@ void* shmattach(int id) {
                 {
                     acquire(&shmtable.shmlock);
                     if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
-                            PTE_W|PTE_U)) == 0)
+                            PTE_P|PTE_W|PTE_U)) == 0)
                     {
                         cprintf("did\n");
                         release(&shmtable.shmlock);
@@ -110,7 +110,7 @@ void* shmattach(int id) {
                 } else {
                     acquire(&shmtable.shmlock);
                     if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
-                            PTE_U)) == 0)
+                            PTE_P|PTE_U)) == 0)
                     {
                         cprintf("did\n");
                         release(&shmtable.shmlock);
@@ -123,7 +123,7 @@ void* shmattach(int id) {
                 {
                     acquire(&shmtable.shmlock);
                     if ((start_va = shm_allocuvm(myproc()->pgdir, shmtable.blocks[i].pages, shmtable.blocks[i].size,
-                            PTE_W|PTE_U)) == 0)
+                            PTE_P|PTE_W|PTE_U)) == 0)
                     {
                         cprintf("did\n");
                         release(&shmtable.shmlock);

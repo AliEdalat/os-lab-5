@@ -120,7 +120,7 @@ shm_allocuvm(pde_t *pgdir,char* pages[], uint amount_pages, int perm)
   //map physical pages starting at start_va_shr 
   shm_from_allocuvm(proc->pgdir,start_va_shr, pages, amount_pages, perm);
 
-  myproc()->sz += amount_pages * PGSIZE;
+  // myproc()->sz += amount_pages * PGSIZE;
 
   return start_va_shr;
 }
@@ -329,13 +329,29 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 void
 freevm(pde_t *pgdir)
 {
-  uint i;
+  uint i, j;
+  int a = 0;
 
   if(pgdir == 0)
     panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
+    a = 0;
     if(pgdir[i] & PTE_P){
+      // cprintf("<><>< free %p\n",(char*)PTE_ADDR(pgdir[i]));
+      for (j = 0; j < myproc()->index; ++j)
+      {
+        if ((char*)PTE_ADDR(pgdir[i]) == (char*)myproc()->paPages[j])
+        {
+          cprintf(">>free skip %p\n", (char*)myproc()->paPages[j]);
+          a=1;
+          break;
+        }
+      }
+      if (a)
+      {
+        continue;
+      }
       char * v = P2V(PTE_ADDR(pgdir[i]));
       kfree(v);
     }

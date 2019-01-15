@@ -11,6 +11,7 @@ main(int argc, char *argv[])
 	int pid;
 	shm_open(1,3,1);
 	b = shm_attach(1);
+	printf(1,"before fork\n");
 	if ((pid = fork()) == 0){
 		// a = shm_attach(1);
 		// printf(1,"b pointer in child : %p\n",b);
@@ -24,13 +25,14 @@ main(int argc, char *argv[])
 		a = a;
 	}
 	else{
-		sleep(100);
+		// sleep(100);
+		wait();
 		// a = shm_attach(1);
 		printf(1,"parent pid : %d\n",getpid());
 		// printf(1,"b pointer in parent : %p\n",b);
 		printf(1,">>%s\n", b);
 		shm_close(1);
 	}
-	sleep(500);
+	// sleep(500);
 	exit();
 }

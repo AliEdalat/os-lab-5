@@ -191,7 +191,7 @@ growproc(int n)
 int
 fork(void)
 {
-  int i, pid;
+  int i, pid, j;
   struct proc *np;
   struct proc *curproc = myproc();
 
@@ -206,6 +206,12 @@ fork(void)
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
+  }
+  np->index = curproc->index;
+  for (j = 0; j < curproc->index; ++j)
+  {
+  	np->shmPages[j] = curproc->shmPages[j];
+  	np->paPages[j] = curproc->paPages[j];
   }
   np->sz = curproc->sz;
   np->parent = curproc;
