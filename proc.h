@@ -87,8 +87,6 @@ struct proc {
   int index;
   int shmPages[40];
   int paPages[40];
-  int shidnum;
-  int shid[10];
 };
 
 struct node{

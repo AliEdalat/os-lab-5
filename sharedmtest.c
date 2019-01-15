@@ -29,7 +29,7 @@ main(int argc, char *argv[])
 		printf(1,"parent pid : %d\n",getpid());
 		// printf(1,"b pointer in parent : %p\n",b);
 		printf(1,">>%s\n", b);
-		// shm_close(1);
+		shm_close(1);
 	}
 	sleep(500);
 	exit();
